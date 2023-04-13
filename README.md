@@ -4,7 +4,7 @@ This repository contains a modified copy of a complex data cleaning pipeline I w
 
 ## Portfolio Information
 
-See the included `presentation.pdf` file for an overview with visuals of the project's highlights.
+The file `presentation.pdf` contains a 3 slide presentation on this project.
 
 ### Description
 
