@@ -54,8 +54,8 @@ source("./R/0_utils.R")
 # reload data from previous step
 load(paste0(interim.master.date.dir,"clean-non-demo-non-test-data.RData"))
 
-# template of possible genes (specific to COH data)
-load(paste0(coh.panel.cur.dir,"COH_Panel_Genes_Template.RData"))
+# template of possible genes (specific to REDACTED data)
+load(paste0(REDACTED.panel.cur.dir,"REDACTED_Panel_Genes_Template.RData"))
 
 # manually categorized panel/lab combos and issues
 valid.lab.panels <- read.csv(paste0(ref.cur.dir,"unique_panels_categorized.csv"))
@@ -75,20 +75,20 @@ source("./R/0_utils.R")
 # master data set
 load(paste0(interim.master.date.dir,"clean-non-demo-data.RData"))
 
-# template of possible genes (specific to COH data)
-load(paste0(coh.panel.cur.dir,"COH_Panel_Genes_Template.RData"))
+# template of possible genes (specific to REDACTED data)
+load(paste0(REDACTED.panel.cur.dir,"REDACTED_Panel_Genes_Template.RData"))
 common.genes <- panel.genes.template$Gene
 
-# COH panel genes and eras tables
-load(paste0(coh.panel.cur.dir,"COH_Panel_Eras.RData"))
-load(paste0(coh.panel.cur.dir,"COH_Panel_Genes.RData"))
+# REDACTED panel genes and eras tables
+load(paste0(REDACTED.panel.cur.dir,"REDACTED_Panel_Eras.RData"))
+load(paste0(REDACTED.panel.cur.dir,"REDACTED_Panel_Genes.RData"))
 
 # load panel and gene references from the MGH project
 load(paste0(ref.cur.dir,"Panel_Genes.RData"))
 load(paste0(ref.cur.dir,"Panel_Eras.RData"))
 
 # functions and keyword object for translating panels to genes
-panel.name.keywords <- read.csv(paste0(coh.panel.cur.dir,"panel_name_keywords_with_coh.csv"))
+panel.name.keywords <- read.csv(paste0(REDACTED.panel.cur.dir,"panel_name_keywords_with_REDACTED.csv"))
 source(paste0(root.dir,"4a_panel-to-gene-mapping-functions.R"))
 
 # wrangle the panels and test results
@@ -132,7 +132,7 @@ load(paste0(interim.master.date.dir,"clean-wrangled-test-and-non-demo-data.RData
 source(paste0(root.dir,"6_merge.R"))
 
 # Final Save for All Genes Variant of Data Set
-save(dat.clean, file = paste0(final.date.dir,"clean-COH-data-all-genes.RData"))
+save(dat.clean, file = paste0(final.date.dir,"clean-REDACTED-data-all-genes.RData"))
 
 #### 7 Final Formatting: PanelPRO and BayesMendel ####
 # clear the environment and load utilities (includes directories)
@@ -140,7 +140,7 @@ remove(list = ls())
 source("./R/0_utils.R")
 
 # clean master data set
-load(paste0(final.date.dir,"clean-COH-data-all-genes.RData"))
+load(paste0(final.date.dir,"clean-REDACTED-data-all-genes.RData"))
 
 # test dates
 load(paste0(interim.master.date.dir,"clean-non-demo-data.RData"))
@@ -149,8 +149,8 @@ load(paste0(interim.master.date.dir,"clean-non-demo-data.RData"))
 source(paste0(root.dir,"7_final-formatting.R"))
 
 # Save Final for BayesMendel and PanelPRO variants of the data set
-save(bm.clean, file = paste0(final.date.dir,"clean-COH-data-BayesMendel.RData"))
-save(pp.clean, file = paste0(final.date.dir,"clean-COH-data-PanelPRO.RData"))
+save(bm.clean, file = paste0(final.date.dir,"clean-REDACTED-data-BayesMendel.RData"))
+save(pp.clean, file = paste0(final.date.dir,"clean-REDACTED-data-PanelPRO.RData"))
 
 #### Version Documentation ####
 # clear the environment and load utilities (includes directories)

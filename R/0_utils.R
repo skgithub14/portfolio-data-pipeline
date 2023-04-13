@@ -1,7 +1,3 @@
-# utilities
-
-#### Directories ####
-
 # key directories
 root.dir <- "./R/"
 data.dir <- paste0(root.dir,"data/")
@@ -13,9 +9,9 @@ interim.master.date.dir <- paste0(interim.master.dir,todays.date,"/")
 final.date.dir <- paste0(final.dir,todays.date,"/")
 
 # reference material directories
-coh.panel.dir <- paste0(root.dir,"coh-specific-panels/")
-coh.panel.cur.dir <- paste0(coh.panel.dir,"current-version/")
-coh.panel.date.dir <- paste0(coh.panel.dir,todays.date,"/")
+REDACTED.panel.dir <- paste0(root.dir,"REDACTED-specific-panels/")
+REDACTED.panel.cur.dir <- paste0(REDACTED.panel.dir,"current-version/")
+REDACTED.panel.date.dir <- paste0(REDACTED.panel.dir,todays.date,"/")
 
 ref.dir <- paste0(data.dir,"reference-data/")
 ref.cur.dir <- paste0(ref.dir,"current-version/")
