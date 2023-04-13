@@ -8,7 +8,7 @@ The file `presentation.pdf` contains a 3 slide presentation on this project.
 
 ### Description
 
-**Purpose:** clean and curate a messy clinical data set from genetic clinic sites from across the US and Latin America. Format it for analysis by two different hereditary cancer syndrome models, BayesMendel and PanelPRO.
+**Purpose:** clean and curate a messy clinical dataset from genetics clinics based across the US and Latin America. The dataset was cleaned and formatted to be compatible with 2 different hereditary cancer syndrome models: BayesMendel and PanelPRO.
 
 **Content:** The dataset consists of pedigrees (family trees in tabular format) with demographics, genetics, surgical, cancer history data, and other clinical data. 
 
@@ -16,7 +16,7 @@ The file `presentation.pdf` contains a 3 slide presentation on this project.
 
 **Initial Number of Columns:** ______
 
-**Source:** data was collected from genetics clinics. The exact source and dataset are confidential. 
+**Source:** dataset was collected from genetics clinics but exact source and dataset are confidential. 
 
 ### Complex Pipeline Features:
 
