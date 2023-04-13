@@ -1,6 +1,10 @@
-# REDACTED-data-cleaning
+# Showcase Data Pipeline Project for my Portfolio
 
-This file has four sections:
+This repository contains a modified copy of a complex data cleaning pipeline I wrote in R. It is modified to remove all identifying data and source information due to confidentiality. See the included `presentation.pdf` file for an overview of the project's highlights.
+
+This repository showcases my ability to write a complex data pipeline in R however, due to the intentionally omitted data, the pipeline unfortunately cannot be run. 
+
+This README has four sections:
   - **Overview**
   - **Variable Codings**: description of variable codings for variables not used in BayesMendel or PanelPRO.
   - **Scripts**: description of each step of the data cleaning process by script.
