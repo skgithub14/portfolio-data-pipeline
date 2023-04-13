@@ -1,0 +1,514 @@
+---
+title: "Data Version Summary Stats"
+output:
+  html_document:
+    toc: True
+    toc_float: True
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+# packages
+library(tidyverse)
+library(knitr)
+
+# knitr settings
+opts_chunk$set(  options(scipen=999), rows.print=25 )
+knit_hooks$set(inline = function(x) { prettyNum(x, big.mark=",") })
+
+# directories
+source("./R/0_utils.R")
+```
+
+```{r utils, include=FALSE}
+# UTILITY FUNCTIONS
+
+pass.to.global <- function(this.list){
+  #' passes every element of a names list to the global environment
+
+  for(item in 1:length(this.list)){ 
+    assign(x = names(this.list)[item], value = this.list[[item]], envir = globalenv()) 
+  }
+  
+}
+
+prep.data <- function(){
+  #' loads a PanelPRO and BayesMendel final data .RData objects,
+  #' splits them into chunks by data type (demographics, surgeries, cancer history,
+  #' marker tests, and genetic tests) and loads those chunks in the global environment.
+  
+  load(paste0(final.date.dir,"clean-COH-data-PanelPRO.RData"))
+  load(paste0(final.date.dir,"clean-COH-data-BayesMendel.RData"))
+  
+  # show column names and row counts
+  print(paste0("PanelPRO Rows: ", nrow(pp.clean)))
+  print("PanelPRO Columns:")
+  print(colnames(pp.clean))
+  cat("\n")
+  print(paste0("BayesMendel Rows: ", nrow(bm.clean)))
+  print("BayesMendel Columns:")
+  print(colnames(bm.clean))
+  
+  # demographics data
+  demo.dat <- 
+    pp.clean %>%
+    select(SubjectID,
+           PedigreeID,
+           Region,
+           ID,
+           Sex,
+           MotherID,
+           FatherID,
+           isProband,
+           CurAge,
+           isDead,
+           race,
+           Ancestry,
+           isHispanic,
+           Twins)
+  
+  bm.demo <- select(bm.clean, SubjectID, race, ethnic)
+  colnames(bm.demo)[2:3] <- c("bm.race","bm.ethnic")
+  demo.dat <- left_join(demo.dat, bm.demo, by = "SubjectID")
+  
+  # cancer history data
+  cancer.dat <- 
+    pp.clean %>%
+    select(SubjectID,
+           PedigreeID,
+           starts_with("isAff"),
+           starts_with("Age"))
+  
+  surg.dat <-
+    pp.clean %>%
+    select(SubjectID,
+           PedigreeID,
+           riskmod,
+           interAge)
+  
+  bm.surg.ages <- select(bm.clean, SubjectID, 
+                         Mastectomy, AgeMastectomy, 
+                         Oophorectomy, AgeOophorectomy)
+  surg.dat <- left_join(surg.dat, bm.surg.ages, by = "SubjectID")
+  
+  # marker test (and colorectal cancer location) data
+  marker.dat <-
+    pp.clean %>%
+    select(SubjectID,
+           PedigreeID,
+           ER,
+           CK14,
+           CK5.6,
+           PR,
+           HER2,
+           MSI)
+  
+  bm.mark <- select(bm.clean, SubjectID, location)
+  marker.dat <- left_join(marker.dat, bm.mark, by = "SubjectID")
+  
+  # genetic test data
+  test.dat <-
+    pp.clean %>%
+    select(SubjectID,
+           PedigreeID,
+           CarrierStatus,
+           APC:TP53)
+  
+  p16 <- select(bm.clean, SubjectID, P16)
+  
+  # pass to global environment
+  df.list <- list(demo.dat = demo.dat, 
+                  cancer.dat = cancer.dat, 
+                  surg.dat = surg.dat, 
+                  marker.dat = marker.dat, 
+                  test.dat = test.dat,
+                  p16=p16)
+  
+  pass.to.global(df.list)
+  
+}
+
+### Summary Functions
+
+demo.summary <- function(df = demo.dat){
+  #' calculate and return summary statistics for demographics data
+
+  # tables
+  region <- table(df$Region, useNA = "always")
+  sex <- table(df$Sex, useNA = "always")
+  races <- table(df$race, useNA = "always")
+  bm.races <- table(df$bm.race, useNA = "always")
+  ancestry <- table(df$Ancestry, useNA = "always")
+  bm.ancestry <- table(df$bm.ethnic, useNA = "always")
+  
+  # counts
+  peds <- length(unique(df$PedigreeID))
+  subs <- length(unique(df$SubjectID))
+  pros <- sum(df$isProband)
+  rels <- subs - pros
+  hisp <- sum(df$isHispanic, na.rm = T)
+  deaths <- sum(df$isDead)
+  twins <- length(df$Twins[which(df$Twins != 0)])
+  
+  # numeric summaries
+  ages <- summary(df$CurAge)
+  ped.size <- summary(df %>%
+                      select(PedigreeID) %>%
+                      group_by(PedigreeID) %>%
+                      summarise(PedSize = n()) %>%
+                      select(PedSize) %>%
+                      as.matrix() %>%
+                      as.vector())
+  
+  # missingness by variable
+  missing.demo <- apply(df, 2, function(x) sum(is.na(x)))
+  
+  # pass to global environment
+  ld.list <- list(subs=subs, peds=peds, ped.size=ped.size, region=region, 
+                  sex=sex, pros=pros, rels=rels, ages=ages, 
+                  deaths=deaths, races=races, bm.races=bm.races, 
+                  ancestry=ancestry, bm.ancestry=bm.ancestry, hisp=hisp, 
+                  twins=twins, missing.demo=missing.demo)
+  
+  pass.to.global(ld.list)
+  
+}
+
+cancer.summary <- function(df = cancer.dat){
+  #' calculate summary stats of cancer history and pass to global
+  
+  # cancer status (minus CBC & BC2)
+  table.cancer <- apply(df %>% select(starts_with("isAff")), 2, function(x) table(x, useNA = "always"))
+  df.cancer <- as.data.frame.list(table.cancer[-((length(table.cancer)-1):length(table.cancer))])
+  colnames(df.cancer)[1] <- "AffectedStatus"
+  df.cancer <- select(df.cancer, -ends_with(".x"))
+  colnames(df.cancer)[2:length(colnames(df.cancer))] <- sub("isAff","",colnames(df.cancer)[2:length(colnames(df.cancer))])
+  colnames(df.cancer)[2:length(colnames(df.cancer))] <- sub(".Freq","",colnames(df.cancer)[2:length(colnames(df.cancer))])
+  df.cancer <- as.data.frame(t(df.cancer))
+  colnames(df.cancer)[1:2] <- df.cancer[1,1:2]
+  colnames(df.cancer)[3] <- "NA"
+  df.cancer <- df.cancer[-1,]
+  
+  # Cancer ages
+  cancer.age.summary <- round(apply(df %>% select(starts_with("Age")), 2, function(x) summary(x)),1)
+  
+  # BC2 status
+  cbc.table <- table(df$isAffBC2, useNA = "always")
+  cbc.bc.bc2.diff <- 
+    df %>%
+    select(AgeBC, AgeBC2) %>%
+    mutate(YrsBetween = AgeBC2 - AgeBC) %>%
+    mutate(ModYrsBetween = ifelse(YrsBetween > 10, "11+", YrsBetween))
+  cbc.age.diff.summary <- round(summary(cbc.bc.bc2.diff$YrsBetween), 1)
+  cbc.age.diff.table <- table(cbc.bc.bc2.diff$ModYrsBetween)
+  cbc.age.diff.table <- cbc.age.diff.table[c(1:2,5:12,3:4)]
+  
+  
+  # pass to global
+  ld.list <- list(df.cancer=df.cancer,
+                  cancer.age.summary=cancer.age.summary,
+                  cbc.table=cbc.table,
+                  cbc.age.diff.summary=cbc.age.diff.summary,
+                  cbc.age.diff.table=cbc.age.diff.table)
+  
+  pass.to.global(ld.list)
+}
+
+surg.summary <- function(df = surg.dat){
+  #' calculate summary stats for prophylactic surgeries and pass to global
+  
+  surgs <- df %>% filter(!is.na(riskmod))
+  
+  # number of subjects with at least one surgery
+  surg.subs.cnt <- nrow(surgs)
+  
+  # number of surgeries
+  mast.cnt <- sum(grepl(pattern = "Mastectomy", surgs$riskmod))
+  ooph.cnt <- sum(grepl(pattern = "Oophorectomy", surgs$riskmod))
+  
+  # summaries of surgery ages
+  mast.ages <- summary(df %>%
+                        select(Mastectomy,AgeMastectomy) %>%
+                        filter(Mastectomy == 1) %>%
+                        select(AgeMastectomy) %>%
+                        as.matrix() %>%
+                        as.vector())
+  
+  ooph.ages <- summary(df %>%
+                        select(Oophorectomy,AgeOophorectomy) %>%
+                        filter(Oophorectomy == 1) %>%
+                        select(AgeOophorectomy) %>%
+                        as.matrix() %>%
+                        as.vector())
+  
+  # pass to global
+  ld.list <- list(surg.subs.cnt=surg.subs.cnt,
+                  mast.cnt=mast.cnt,
+                  ooph.cnt=ooph.cnt,
+                  mast.ages=mast.ages,
+                  ooph.ages=ooph.ages)
+  
+  pass.to.global(ld.list)
+  
+}
+
+marker.summary <- function(df = marker.dat){
+  #' calculate bio marker summary stats and pass to global environment
+  
+  # result type counts by bio marker
+  marker.table <- apply(df %>% select(-c(SubjectID,PedigreeID,location)), 2, function(x) table(x, useNA = "always"))
+  
+  # table of colorectal cancer locations (for BayesMendel)
+  loc.table <- table(df$location, useNA = "always")
+  
+  # pass to global
+  ld.list <- list(marker.table=marker.table,
+                  loc.table=loc.table)
+  
+  pass.to.global(ld.list)
+  
+}
+
+test.summary <- function(df = test.dat, bm.p16 = p16){
+  #' calculate gene test summary stats and pass to global
+  
+  not.tested   <- sum(is.na(test.dat$CarrierStatus))
+  pos.carriers <- sum(test.dat$CarrierStatus[which(!is.na(test.dat$CarrierStatus))] == 1)
+  vus.carriers <- sum(test.dat$CarrierStatus[which(!is.na(test.dat$CarrierStatus))] == 2)
+  non.carriers <- sum(test.dat$CarrierStatus[which(!is.na(test.dat$CarrierStatus))] == 0)
+  
+  tested.per.ped <- summary(test.dat %>%
+                            select(PedigreeID,CarrierStatus) %>%
+                            filter(!is.na(CarrierStatus)) %>%
+                            group_by(PedigreeID) %>%
+                            summarise(Count = n()) %>%
+                            select(Count) %>%
+                            as.matrix() %>%
+                            as.vector())
+  
+  gene.results <- apply(test.dat %>% select(-c(SubjectID,PedigreeID,CarrierStatus)), 
+                        2, 
+                        function(x) table(x, useNA = "always"))
+  
+  p16.results <- table(bm.p16$P16, useNA = "always")
+  
+  
+  # pass to global
+  ld.list <- list(not.tested=not.tested,
+                  pos.carriers=pos.carriers,
+                  vus.carriers=vus.carriers,
+                  non.carriers=non.carriers,
+                  tested.per.ped=tested.per.ped,
+                  gene.results=gene.results,
+                  p16.results=p16.results)
+  
+  pass.to.global(ld.list)
+  
+}
+
+all.gene.summary <- function(){
+  #' table of results by gene type for all genes in COH data set
+  
+  # load all genes data set
+  load(paste0(final.date.dir,"clean-COH-data-all-genes.RData"))
+  gene.results <- dat.clean %>% select(ABL1:ZRSR2)
+  
+  # counts by result type and gene
+  pos.cnts <- apply(gene.results, 2, function(x) sum(!is.na(x) & x==1, na.rm = T))
+  vus.cnts <- apply(gene.results, 2, function(x) sum(!is.na(x) & x==2, na.rm = T))
+  neg.cnts <- apply(gene.results, 2, function(x) sum(!is.na(x) & x==0, na.rm = T))
+  no.test.cnts <- apply(gene.results, 2, function(x) sum(is.na(x)))
+  
+  # put it in a table
+  cnts <- as.data.frame(rbind(pos.cnts, vus.cnts, neg.cnts, no.test.cnts))
+  rownames(cnts) <- c("Pos", "VUS", "Neg", "No Test")
+  cnts
+  
+}
+```
+
+
+# Data
+
+**Date of Data Generation / Version: `r todays.date`**
+
+```{r data_source, echo=FALSE}
+# load and prepare data PanelPRO and BayesMendel data frames
+prep.data()
+```
+
+
+# Demographics
+
+```{r demo, echo=FALSE}
+demo.summary()
+```
+
+Subjects: `r subs`
+
+Pedigrees: `r peds`
+
+Pedigree Size:
+```{r ped_size, echo=FALSE}
+ped.size
+```
+
+Region:
+```{r region, echo=FALSE}
+region
+```
+
+Sex:
+```{r sex, echo=FALSE}
+sex
+```
+
+Probands: `r pros`
+
+Ages:
+```{r ages, echo=FALSE}
+ages
+```
+
+Deaths: `r deaths`
+
+PanelPRO Races:
+```{r races, echo=FALSE}
+races
+```
+
+BayesMendel Races (no missing values due to single race category for each family requirement):
+```{r bm_races, echo=FALSE}
+bm.races
+```
+
+PanelPRO Ancestry:
+```{r ancestry, echo=FALSE}
+ancestry
+```
+
+BayesMendel ethnic:
+```{r bm_ancestry, echo=FALSE}
+bm.ancestry
+```
+
+Hispanics: `r hisp`
+
+Twins: `r twins`
+
+Missingness:
+```{r demo_missing, echo=FALSE}
+missing.demo
+```
+
+
+# Cancer History
+
+```{r cancer, echo=FALSE}
+cancer.summary()
+```
+
+**Cancer Status (excluding CBC/BC2)** (0 = no cancer, 1 = cancer)
+```{r cancer_status, echo=FALSE}
+df.cancer
+```
+
+Cancer Ages:
+```{r cancer_ages, echo=FALSE}
+cancer.age.summary
+```
+
+
+2nd Breast Cancer Status:
+```{r cbc, echo=FALSE}
+cbc.table
+```
+
+Summary of Difference in Years between 1st BC and 2nd BC:
+```{r cbc-age-diff, echo=FALSE}
+cbc.age.diff.summary
+```
+
+Table of Difference in Years between 1st BC and 2nd BC:
+```{r cbc-age-tbl, echo=FALSE}
+cbc.age.diff.table
+```
+
+# Prophylactic Surgeries
+
+```{r surg, echo=FALSE}
+surg.summary()
+```
+
+Subjects with a prophylactic surgery: `r surg.subs.cnt`
+
+Mastectomies: `r mast.cnt`
+
+Mastectomy Ages:
+```{r mast_ages, echo=FALSE}
+mast.ages
+```
+
+Oophorectomies: `r ooph.cnt`
+
+Oophorectomy Ages:
+```{r ooph_ages, echo=FALSE}
+ooph.ages
+```
+
+# Marker Tests
+
+```{r marker, echo=FALSE}
+marker.summary()
+```
+
+Marker Results: 
+```{r marker_results, echo=FALSE}
+marker.table
+```
+
+Colorectal Cancer Location:
+```{r location, echo=FALSE}
+loc.table
+```
+
+
+# Gene Tests
+
+```{r test, echo=FALSE}
+test.summary()
+```
+
+Subjects with at least 1 positive gene: `r pos.carriers`
+
+Subjects with at least 1 VUS gene and no positive genes: `r vus.carriers`
+
+Subjects with all negative tests: `r non.carriers`
+
+Subjects never tested: `r not.tested`
+
+Subjects with Gene Tests Per Pedigree:
+```{r test_by_ped, echo=FALSE}
+tested.per.ped
+```
+
+Results by PanelPRO Gene (NA = no test, 0 = neg, 1 = pos, 2 = VUS):
+```{r gene_results, echo=FALSE}
+gene.results
+```
+
+P16 Results:
+```{r p16, echo=FALSE}
+p16.results
+```
+
+**All Gene Results in Study**
+```{r all_genes, echo=FALSE}
+all.genes <- all.gene.summary()
+pander::pander(all.genes, split.table = 80, style = "rmarkdown")
+```
+
+
+
+
+

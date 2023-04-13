@@ -1,0 +1,11 @@
+data/
+coh-specific-panels/
+*.Rhistory
+.Rhistory
+*.RData
+*.csv
+*.xlsx
+*.Rproj
+*.html
+.Rproj.user/
+secrets/

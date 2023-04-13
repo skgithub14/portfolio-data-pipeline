@@ -1,0 +1,13 @@
+Package: COH.data.pipeline
+Type: Package
+Title: COH Data Pipeline
+Version: 0.1.0
+Author: Stephen Knapp
+Maintainer: Stephen Knapp <stepheht_knapp@dfci.harvard.edu>
+Description: This directory contains the files required to clean and 
+    wrangle the COH data set into three clean data sets, a master with 
+    over 800 tested genes, one formatted for BayesMendel and one 
+    formatted for PanelPRO.
+License: NA
+Encoding: UTF-8
+LazyData: true
