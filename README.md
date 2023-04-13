@@ -1,16 +1,54 @@
 # Showcase Data Pipeline for Portfolio
 
-This repository contains a modified copy of a complex data cleaning pipeline I wrote in R. It is modified to remove all identifying data and source information due to confidentiality. See the included `presentation.pdf` file for an overview of the project's highlights.
+This repository contains a modified copy of a complex data cleaning pipeline I wrote in R. It is modified to remove all identifying data and source information due to confidentiality. 
 
-This repository showcases my ability to write a complex data pipeline in R however, due to the intentionally omitted data, the pipeline unfortunately cannot be run. 
+## Portfolio Information
 
-This README has four sections:
+See the included `presentation.pdf` file for an overview with visuals of the project's highlights.
+
+### Description
+
+**Purpose:** clean and curate a messy clinical data set from genetic clinic sites from across the US and Latin America. Format it for analysis by two different hereditary cancer syndrome models, BayesMendel and PanelPRO.
+
+**Content:** The dataset consists of pedigrees (family trees in tabular format) with demographics, genetics, surgical, cancer history data, and other clinical data. 
+
+**Initial Number of Rows:** _____ (each row represents one person in one family)
+
+**Initial Number of Columns:** ______
+
+**Source:** data was collected from genetics clinics. The exact source and dataset are confidential. 
+
+### Complex Pipeline Features:
+
+**Linked Records:** 
+ - Records within the same family must be linked for the models to run.
+ - Example 1: race of 1 relative is based on a mix of their mother’s and father’s race.
+ - Example 2: a child must have both a male and female biological parent who are older than the child.
+ - _Solution:_ compared and imputed missing records within families for consistency.
+
+**Gene Tests:**
+ - Understanding which genes were tested and which were not is critical data for the models. 
+ - Each test consists of a panel of one to 800+ genes. Panel names and the genes they include are non-standard and the genes in each panel change over time. Most genes with “negative” results were not recorded which makes the model results less accurate.
+ - _Solution:_ automated the comparison of the unstructured panel names, dates of testing, recorded results, and published panel information from gene testing labs. Selected the most likely panel for each record and use it to impute all missing genes.
+
+**Cancer history:**
+ - Cancer history is also critical for the model but…
+ - Cancer diagnoses were unstructured, inconsistently coded, and often misspelled.
+ - _Solution:_ created a dictionary of word roots, common medical codings, and common misspellings.
+
+This repository showcases my ability to write a complex data pipeline in R however, due to the intentionally omitted data, the pipeline unfortunately cannot be run.
+
+
+
+## Pipeline Documentation
+
+This pipeline documentation has four sub-sections:
   - **Overview**
   - **Variable Codings**: description of variable codings for variables not used in BayesMendel or PanelPRO.
   - **Scripts**: description of each step of the data cleaning process by script.
   - **Assumptions**: description of each assumption used in the cleaning process.
 
-## Overview
+### Overview
 
 This repo contains the files required to clean and wrangle the REDACTED genetics pedigree data set.  The pipeline produces three clean variants of the same raw data set every time the pipeline runs.  
   - The "all genes" variant (`clean-REDACTED-data-all-genes.RData`) contain all 800+ genes in the REDACTED data. This file is >6Gb and won't open on most local machines. You can see the data summary for all 800+ genes in the `data-version-summary-stats-[VERSION DATE].html` file though. 
@@ -29,7 +67,7 @@ All versions of the data set can be found on REDACTED Dropbox:
 
 The directory above has a sub-directory for each date the pipeline ran.
 
-## Variable Codings
+### Variable Codings
 
 For an explanation of any variables that are utilized by either [PanelPRO R package](https://github.com/bayesmendel/PanelPRO) or [BayesMendel R package](https://projects.iq.harvard.edu/bayesmendel/bayesmendel-r-package), please see the documentation for those R packages.
 
@@ -44,11 +82,11 @@ The following variables are included in the clean data but are not used by Panel
 - Note on the codings of gene tests for the "all-gene" versions of the data set: these follow the PanelPRO codings.
 
 
-## Scripts
+### Scripts
 
 The pipeline consists of 7 main steps divided into 8 scripts.  The `MAIN.R` script runs all 8 scripts and loads and saves the required data for each step.
 
-### 1_split-data.R:
+#### 1_split-data.R:
 
 Splits the data into demographics data and non-demographics data (which will be rejoined later in the pipeline).
 
@@ -59,7 +97,7 @@ Splits the data into demographics data and non-demographics data (which will be 
 5. Replace identifiable PedigreeIDs
 6. Split data into demographics columns (races, ethnicities, ages, etc.) and non-demographics columns (testing, surgeries, cancer history)
 
-### 2_non-demographics-non-test-data.cleaning.R
+#### 2_non-demographics-non-test-data.cleaning.R
 
 1. Drop unneeded tumor columns (`IHC` dropped but `MSI`, `HER2`, `PR`, and `ER` are kept; note `CK14` and `CK5.6` are not in the raw data).
 2. Mastectomy: recode and compute age of surgery using date of birth (note `AgeMastectomy` for subjects without `Mastectomy` set to `CurAge` / `AgeDeath` per BayesMendel format)
@@ -70,7 +108,7 @@ Splits the data into demographics data and non-demographics data (which will be 
 6. Drop all surgeries and cancers occurring after current age.
 7. Eliminate non-prophylactic surgeries.  Assumes any surgery conducted before onset of related cancer is prophylactic.  Assumes any surgery for unaffected person for relevant cancer is prophylactic.
 
-### 3_gene-test-data-cleaning.R
+#### 3_gene-test-data-cleaning.R
 
 1. Drop variants and DOB columns
 2. Assign easy and intuitive column names
@@ -84,7 +122,7 @@ Splits the data into demographics data and non-demographics data (which will be 
 10. Manual panel name cleaning integration
 11. Clean specific genes tested
 
-### 4a_panel-to-gene-mapping-functions.R
+#### 4a_panel-to-gene-mapping-functions.R
 
 Contains the following functions (see function doc strings for details):
   - `impute.missing.panel.date()`
@@ -95,7 +133,7 @@ Contains the following functions (see function doc strings for details):
   - `get.specific.genes.tests()`
   - `compare.results()`
 
-### 4_gene-test-wrangling.R
+#### 4_gene-test-wrangling.R
 
 Produces two data frames with test results, one by test and one by subject.
 
@@ -107,7 +145,7 @@ Produces two data frames with test results, one by test and one by subject.
 6. Record test results by gene
 7. Resolve conflicts and consolidate test results for individuals with multiple genetic tests
 
-### 5_demographics-cleaning.R
+#### 5_demographics-cleaning.R
 
 1. Recode gender
 2. Drop subjects with missing `MotherID` and `FatherID`
@@ -117,7 +155,7 @@ Produces two data frames with test results, one by test and one by subject.
 6. Recode `isHispanic`
 7. Race codings (for both BayesMendel and PanelPRO)
 
-### 6_merge.R
+#### 6_merge.R
 
 Creates the clean master data frame with all tested genes with ages, cancers, and surgeries.
 
@@ -128,7 +166,7 @@ Creates the clean master data frame with all tested genes with ages, cancers, an
 5. Convert columns to correct classes
 6. Remove marker tests for subjects without associated cancers
 
-### 7_final-formatting.R
+#### 7_final-formatting.R
 
 This script takes the master clean data frame with all genes tested and formats it into variants for BayesMendel and PanelPRO.  
 
@@ -151,36 +189,36 @@ Note the differences in gene test coding between BayesMendel and PanelPRO:
   - BayesMendel: `0` = no test, `1` = positive, `2` = negative, `3` = VUS
   - PanelPRO: `NA` = no test, `0` = negative, `1` = positive, `2` = VUS
 
-## Assumptions
+### Assumptions
 
-### 1. Age cleaning and adjustments:
+#### 1. Age cleaning and adjustments:
 
   - Ages above `125` and less than `1` were assumed to be misreported and turned to `NA`.
   - Ages of surgeries and cancers that were older than the `CurAge` / `AgeDeath` were assumed to be reported after the family entered the study so those surgeries and cancers were removed from the data set.
 
-### 2. Imputation of sex: 
+#### 2. Imputation of sex: 
   - if a female cancer or prophylactic surgery was found the sex was assumed to be female. 
   - if subject had a child with a person with a known sex, then the opposite sex was assumed. 
   - if males were assigned female cancers or surgeries: if they were fathers, remove the female cancers and surgeries, otherwise change the subjects sex to female
   - if mother assigned male sex or father assigned female sex then the sexes were changed to match parental title
 
-### 3. Race, ethnic and Ancestry assumptions:
+#### 3. Race, ethnic and Ancestry assumptions:
   - Native Hawaiian / Pacific Islander was grouped into `"Asian"` because NHPI is not a race group in either BayesMendel or PanelPRO. 
   - If a subject's mother or father was `"AJ"`, the subject was assumed to be `"AJ"`, otherwise `"non-AJ"` was assumed.  There was no data on `"Italian"` or `"other"` in the raw data. 
   - For multi-race subjects in BayesMendel (which includes Hispanic as its own race category) those subjects had their race listed as `"Unknown"`.
   - For multi-race subjects in PanelPRO (which has `"WH"` (White-Hispanic) `"WNH"` (White Non-Hispanic), and `"White"` categories), Hispanic only subjects were assumed to be `"WH"` if they did not report anything for White, White subjects without reporting on Hispanic ethnicity were just listed as `"White"`, subjects that reported being both White and Hispanic were listed as such, subjects reporting White and Non-Hispanic were listed as such.  Any other combinations of races were assigned `"All_Races"`.
   - to account for the fact BayesMendel can only handle one race label per family, all races in a family were checked for a single unique value.  If a single unique values was found all members of the family were changed to that race.  If multiple races labels were found in the family, all family members' races were changed to `"Unknown"`.
 
-### 4. Surgery cleaning and adjustments:
+#### 4. Surgery cleaning and adjustments:
 
   - `Year.of.DOB`, which is used to help calculate age of oophorectomy, was assumed to be mis-entered if it was less than `1800` or greater than `2021`.  These entries were set to `NA`.
   - Non-prophylactic surgeries were reported in this raw data set.  To eliminate those the following rationale was used: assume surgery was prophylactic if the person is unaffected by the relevant cancers or if affected by the relevant cancers, then assume the surgery was prophylactic if the cancer age and surgery age are present AND the cancer age is greater than the surgery age.
 
-### 5. Cancers cleaning and adjustments:
+#### 5. Cancers cleaning and adjustments:
 
   - See the lists named `raw.cancers` and `unclass.cancers` in script `2_non-demographics-non-test-data-cleaning.R` for how cancer names from the medical records were classified into the 19 PanelPRO cancer types (and which could not be classified).
 
-### 6. Biomarker codings and adjustments:
+#### 6. Biomarker codings and adjustments:
 
   - The following code excerpts were used to translate the corresponding marker test result labels to the BayesMendel codings (`0`=no test, `1`=pos, `2`=neg). VUS as coded as `3`.
 	```
@@ -258,7 +296,7 @@ Note the differences in gene test coding between BayesMendel and PanelPRO:
   - Note: CK14 and CK5/6 were not reported in the raw data and therefore the columns are filled with the equivalent of no test, depending on the format.
   - Marker tests reported for people without the corresponding cancers (Breast Cancer for `HER2`, `ER`, `PR` and Colorectal Cancer for `MSI`) were assumed to be invalid and dropped.  For `MSI` and `HER2`, if multiple test results were reported: if at least one was positive then final result assumed positive, if no positives and at least one negative then assumed to be negative.
         
-### 7. Gene codings and adjustments:
+#### 7. Gene codings and adjustments:
 
   - The following original gene test result labels were translated using the PanelPRO codings (`NA`=no test, `0`=neg, `1`=pos).  VUS's were coded as `2`.
 	```
@@ -322,7 +360,7 @@ Note the differences in gene test coding between BayesMendel and PanelPRO:
 			'VH2'))
 	```
 	                   
-### 8. Panel assignments and testing:
+#### 8. Panel assignments and testing:
 
   - The following panel name keywords were assumed to relate to the following misspellings and short hand.
 	```
