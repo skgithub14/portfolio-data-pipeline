@@ -24,17 +24,17 @@ The file `presentation.pdf` contains a 3 slide presentation on this project.
  - Records within the same family must be linked for the models to run.
  - Example 1: race of 1 relative is based on a mix of their mother’s and father’s race.
  - Example 2: a child must have both a male and female biological parent who are older than the child.
- - _Solution:_ compared and imputed missing records within families for consistency.
+ - _Solution:_ cleaned and imputed missing records by using a relatives’ data as a reference.
 
 **Gene Tests:**
  - Understanding which genes were tested and which were not is critical data for the models. 
- - Each test consists of a panel of one to 800+ genes. Panel names and the genes they include are non-standard and the genes in each panel change over time. Most genes with “negative” results were not recorded which makes the model results less accurate.
- - _Solution:_ automated the comparison of the unstructured panel names, dates of testing, recorded results, and published panel information from gene testing labs. Selected the most likely panel for each record and use it to impute all missing genes.
+ - Each test consists of a panel that include between 1 and 800+ genes. Panel names and the genes they include are non-standard and change over time. Genes with “negative” results were not recorded which, if not imputed, reduces the accuracy of the models.
+ - Solution: automated the classification of panel names and their contents by comparing the unstructured panel names, dates of testing, recorded results, and published panel information from gene testing labs. 
 
 **Cancer history:**
  - Cancer history is also critical for the model but…
  - Cancer diagnoses were unstructured, inconsistently coded, and often misspelled.
- - _Solution:_ created a dictionary of word roots, common medical codings, and common misspellings.
+ - _Solution:_ created a dictionary of word roots, common medical codings, and common misspellings to classify cancer diagnoses from medical notes into standard cancer codes.
 
 This repository showcases my ability to write a complex data pipeline in R however, due to the intentionally omitted data, the pipeline unfortunately cannot be run.
 
