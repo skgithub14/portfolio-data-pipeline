@@ -1,4 +1,4 @@
-# Showcase Data Pipeline for Portfolio
+# Showcase Data Pipeline
 
 This repository contains a modified copy of a complex data cleaning pipeline I wrote in R. Due to confidentialy, it has modified to remove all identifying data and source information. 
 
