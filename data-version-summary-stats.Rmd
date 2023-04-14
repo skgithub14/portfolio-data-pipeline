@@ -29,7 +29,6 @@ pass.to.global <- function(this.list){
   for(item in 1:length(this.list)){ 
     assign(x = names(this.list)[item], value = this.list[[item]], envir = globalenv()) 
   }
-  
 }
 
 prep.data <- function(){
@@ -303,7 +302,6 @@ test.summary <- function(df = test.dat, bm.p16 = p16){
                   p16.results=p16.results)
   
   pass.to.global(ld.list)
-  
 }
 
 all.gene.summary <- function(){
@@ -323,7 +321,6 @@ all.gene.summary <- function(){
   cnts <- as.data.frame(rbind(pos.cnts, vus.cnts, neg.cnts, no.test.cnts))
   rownames(cnts) <- c("Pos", "VUS", "Neg", "No Test")
   cnts
-  
 }
 ```
 
