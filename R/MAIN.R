@@ -163,14 +163,12 @@ si <- capture.output(sessionInfo())
 writeLines(si, paste0(final.date.dir, si.name))
 
 # summary stats
-# this is commented out because the formatting is not as nice using the command
-# as it is manually opening the file and using the knit button.  This may change in the future.
-# input.rmd <- "data-version-summary-stats.Rmd"
-# output.rmd <- paste0("data-version-summary-stats-",todays.date,".html")
-# render(input = input.rmd, 
-#        output_dir = final.date.dir,
-#        output_file = output.rmd,
-#        output_format = "html_document")
+input.rmd <- "data-version-summary-stats.Rmd"
+output.rmd <- paste0("data-version-summary-stats-",todays.date,".html")
+render(input = input.rmd,
+       output_dir = final.date.dir,
+       output_file = output.rmd,
+       output_format = "html_document")
 
 #' reminds user to manually create a README and summary statistics for new data version
 reminders <- function(){
